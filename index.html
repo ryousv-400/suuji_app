@@ -28,10 +28,11 @@
     <div id="app-container">
         <!-- Titlescreen -->
         <section id="screen-title" class="screen active">
-            <h1 class="bounce-in">かずであそぼう！</h1>
-            <div class="mascot-container title-mascot">
-                <!-- Using a placeholder emoji or later injected image -->
-                <div class="mascot">🐰</div>
+            <div class="title-content">
+                <h1 class="bounce-in">かずであそぼう！</h1>
+                <div class="mascot-container title-mascot">
+                    <div class="mascot">🐰</div>
+                </div>
             </div>
             <button class="btn btn-primary pulse" id="btn-start">スタート</button>
         </section>
@@ -58,39 +59,36 @@
                 <div class="star-count">⭐ <span id="star-text">0</span></div>
             </div>
 
-            <div class="problem-area zoom-in">
-                <!-- Visual representations -->
-                <div class="visuals" id="visuals-left">
-                    <!-- e.g. 🍎🍎 -->
+            <div class="play-main">
+                <div class="problem-area zoom-in">
+                    <div class="visuals" id="visuals-left"></div>
+                    <div class="operator">＋</div>
+                    <div class="visuals" id="visuals-right"></div>
                 </div>
-                <div class="operator">＋</div>
-                <div class="visuals" id="visuals-right">
-                    <!-- e.g. 🍎 -->
-                </div>
-            </div>
 
-            <div class="equation">
-                <span id="num-left">2</span> ＋ <span id="num-right">1</span> ＝ <span id="num-answer">？</span>
+                <div class="equation">
+                    <span id="num-left">2</span> ＋ <span id="num-right">1</span> ＝ <span id="num-answer">？</span>
+                </div>
+
+                <!-- Mascot reaction: inline toast between equation and choices -->
+                <div class="reaction-toast hidden" id="reaction-mascot">
+                    <span class="reaction-emoji" id="reaction-emoji">🐶</span>
+                    <span class="reaction-text" id="mascot-speech">やったね！</span>
+                </div>
             </div>
 
             <div class="choices-area fade-in-up" id="choices-container">
                 <!-- Choices injected by JS -->
-                <!-- <button class="btn btn-choice">3</button> -->
-            </div>
-
-            <div class="mascot-container play-mascot hidden" id="reaction-mascot">
-                <div class="speech-bubble" id="mascot-speech">やったね！</div>
-                <div class="mascot jump">🐶</div>
             </div>
         </section>
 
         <!-- Result Screen -->
         <section id="screen-result" class="screen hidden">
-            <h2 class="bounce-in">すごい！</h2>
-            <div class="medal-container zoom-in ripple">
-                🏅
+            <div class="result-content">
+                <h2 class="bounce-in">すごい！</h2>
+                <div class="medal-container zoom-in ripple">🏅</div>
+                <p class="result-message">がんばったね！</p>
             </div>
-            <p class="result-message">がんばったね！</p>
             <div class="result-actions fade-in-up">
                 <button class="btn btn-primary" id="btn-retry-stage">もういちど</button>
                 <button class="btn btn-secondary" id="btn-to-stage-select">ちがうかたち</button>

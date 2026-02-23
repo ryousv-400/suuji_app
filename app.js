@@ -43,9 +43,10 @@ const UI = {
     numAnswer: document.getElementById('num-answer'),
     choicesContainer: document.getElementById('choices-container'),
 
-    // Mascot elements
+    // Reaction toast elements
     reactionMascot: document.getElementById('reaction-mascot'),
     mascotSpeech: document.getElementById('mascot-speech'),
+    reactionEmoji: document.getElementById('reaction-emoji'),
 
     // Result elements
     resultMessage: document.querySelector('.result-message')
@@ -295,17 +296,17 @@ function handleAnswer(selectedAnswer, buttonElement) {
 
 function showMascotReaction(text, isHappy) {
     UI.mascotSpeech.textContent = text;
-    UI.reactionMascot.classList.remove('hidden');
 
-    // Reset animation
-    const mascotIcon = UI.reactionMascot.querySelector('.mascot');
-    mascotIcon.classList.remove('jump', 'shake');
-    void mascotIcon.offsetWidth;
+    // Set style based on correct/wrong
+    UI.reactionMascot.classList.remove('hidden', 'correct-toast', 'wrong-toast');
+    void UI.reactionMascot.offsetWidth; // reset animation
 
     if (isHappy) {
-        mascotIcon.classList.add('jump');
+        UI.reactionEmoji.textContent = '🎉';
+        UI.reactionMascot.classList.add('correct-toast');
     } else {
-        mascotIcon.style.animation = 'shake 0.5s ease';
+        UI.reactionEmoji.textContent = '💪';
+        UI.reactionMascot.classList.add('wrong-toast');
     }
 }
 
