@@ -17,7 +17,8 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  touch-action: manipulation; /* Prevent double-tap zoom */
+  touch-action: manipulation;
+  /* Prevent double-tap zoom */
 }
 
 body {
@@ -28,18 +29,22 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  overflow: hidden; /* Prevent scrolling during play */
+  min-height: 100dvh;
+  /* Dynamic viewport height for mobile browsers */
+  overflow: hidden;
   /* Playful background pattern */
   background-image: radial-gradient(var(--secondary-color) 2px, transparent 2px);
   background-size: 40px 40px;
   background-position: 0 0, 20px 20px;
+  /* iOS safe area padding */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 #app-container {
   width: 100%;
   max-width: 600px;
   height: 100vh;
-  max-height: 900px;
+  height: 100dvh;
   background: white;
   position: relative;
   overflow: hidden;
@@ -51,6 +56,7 @@ body {
 @media (min-width: 600px) {
   #app-container {
     height: 90vh;
+    height: 90dvh;
     border-radius: 30px;
     border: 8px solid white;
   }
@@ -66,9 +72,13 @@ body {
   display: flex;
   flex-direction: column;
   padding: 20px;
+  padding-top: calc(20px + env(safe-area-inset-top));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
   background: linear-gradient(135deg, #ffffff 0%, #f1f2f6 100%);
   transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .screen.hidden {
@@ -85,29 +95,30 @@ body {
 
 /* --- Typography --- */
 h1 {
-  font-size: 3rem;
+  font-size: clamp(2rem, 8vw, 3rem);
   text-align: center;
   color: var(--primary-color);
-  margin-top: 20%;
-  margin-bottom: 20px;
+  margin-top: 15%;
+  margin-bottom: 15px;
   text-shadow: 3px 3px 0px rgba(255, 107, 107, 0.2);
+  line-height: 1.2;
 }
 
 h2 {
-  font-size: 2.5rem;
+  font-size: clamp(1.8rem, 7vw, 2.5rem);
   text-align: center;
   color: var(--secondary-dark);
-  margin-top: 10%;
-  margin-bottom: 30px;
+  margin-top: 8%;
+  margin-bottom: 20px;
 }
 
 .equation {
-  font-size: 4.5rem;
+  font-size: clamp(2.5rem, 10vw, 4.5rem);
   font-weight: 900;
   text-align: center;
-  margin: 20px 0;
+  margin: 10px 0;
   color: var(--text-color);
-  letter-spacing: 5px;
+  letter-spacing: 3px;
 }
 
 /* --- Buttons --- */
@@ -123,6 +134,7 @@ h2 {
   justify-content: center;
   align-items: center;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .btn:active {
@@ -133,11 +145,13 @@ h2 {
 .btn-primary {
   background: var(--primary-color);
   color: white;
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 5vw, 2rem);
   padding: 15px 40px;
   margin: 0 auto;
   box-shadow: 0 6px 0 var(--primary-dark);
+  min-height: 60px;
 }
+
 .btn-primary:active {
   box-shadow: 0 0px 0 var(--primary-dark);
 }
@@ -145,20 +159,23 @@ h2 {
 .btn-secondary {
   background: var(--text-color);
   color: white;
-  font-size: 1.5rem;
+  font-size: clamp(1.2rem, 4vw, 1.5rem);
   padding: 15px 30px;
   margin: 0 auto;
+  min-height: 55px;
 }
 
 .btn-stage {
   background: white;
   color: var(--secondary-dark);
-  font-size: 2.5rem;
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
   padding: 20px;
   border: 4px solid var(--secondary-color);
   border-radius: 25px;
   box-shadow: 0 6px 0 var(--secondary-color);
+  min-height: 80px;
 }
+
 .btn-stage:active {
   box-shadow: 0 0px 0 transparent;
 }
@@ -166,14 +183,18 @@ h2 {
 .btn-choice {
   background: white;
   color: var(--text-color);
-  font-size: 4rem;
+  font-size: clamp(2.5rem, 8vw, 4rem);
   border: 4px solid #dfe4ea;
   border-radius: 25px;
   box-shadow: 0 8px 0 #ced6e0;
+  min-height: 80px;
+  padding: 10px;
 }
+
 .btn-choice:active {
   box-shadow: 0 0px 0 transparent;
 }
+
 .btn-choice.correct {
   background: var(--correct-color);
   color: white;
@@ -181,6 +202,7 @@ h2 {
   box-shadow: 0 8px 0 #10ac84;
   animation: pop 0.3s ease;
 }
+
 .btn-choice.wrong {
   background: var(--wrong-color);
   color: white;
@@ -192,9 +214,12 @@ h2 {
 .btn-icon {
   background: #f1f2f6;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  font-size: 1.5rem;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  /* Apple's minimum tap target */
+  min-height: 44px;
+  font-size: 1.3rem;
   box-shadow: 0 4px 0 #dfe4ea;
 }
 
@@ -202,29 +227,36 @@ h2 {
 .stage-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 15px;
   padding: 10px;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
+  flex-grow: 1;
+  align-content: center;
 }
 
-.mt-auto { margin-top: auto; margin-bottom: 20px; }
+.mt-auto {
+  margin-top: auto;
+  margin-bottom: 20px;
+}
 
 /* Play Screen */
 .top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .progress-bar {
   flex-grow: 1;
-  height: 20px;
+  height: 16px;
   background: #dfe4ea;
-  border-radius: 10px;
-  margin: 0 15px;
+  border-radius: 8px;
+  margin: 0 10px;
   overflow: hidden;
 }
+
 .progress-fill {
   height: 100%;
   background: var(--accent-color);
@@ -233,36 +265,38 @@ h2 {
 }
 
 .star-count {
-  font-size: 1.5rem;
+  font-size: clamp(1rem, 3.5vw, 1.5rem);
   font-weight: 700;
   background: white;
-  padding: 5px 15px;
+  padding: 5px 12px;
   border-radius: 20px;
   box-shadow: 0 4px 0 var(--shadow-color);
+  white-space: nowrap;
 }
 
 .problem-area {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
-  min-height: 120px;
+  margin-bottom: 5px;
+  min-height: 80px;
   background: rgba(255, 255, 255, 0.5);
-  border-radius: 30px;
-  padding: 20px;
+  border-radius: 20px;
+  padding: 10px;
+  flex-shrink: 0;
 }
 
 .visuals {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 3px;
   justify-content: center;
   width: 40%;
-  font-size: 2.5rem;
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
 }
 
 .operator {
-  font-size: 2.5rem;
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
   font-weight: 900;
   width: 10%;
   text-align: center;
@@ -271,32 +305,35 @@ h2 {
 .choices-area {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  padding: 10px;
+  gap: 12px;
+  padding: 5px;
   margin-top: auto;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 /* Result Screen */
 .medal-container {
-  font-size: 8rem;
+  font-size: clamp(5rem, 20vw, 8rem);
   text-align: center;
-  margin: 30px 0;
+  margin: 20px 0;
   filter: drop-shadow(0 10px 20px rgba(254, 202, 87, 0.4));
 }
+
 .result-message {
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 5vw, 2rem);
   text-align: center;
   font-weight: 700;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
   color: var(--primary-color);
 }
+
 .result-actions {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 15px;
   margin-top: auto;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 /* --- Mascots --- */
@@ -305,30 +342,41 @@ h2 {
   flex-direction: column;
   align-items: center;
 }
+
 .mascot {
-  font-size: 6rem;
-  filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1));
+  font-size: clamp(4rem, 12vw, 6rem);
+  filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.1));
 }
+
 .title-mascot {
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 }
+
 .play-mascot {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
+  bottom: calc(15px + env(safe-area-inset-bottom));
+  right: 15px;
   pointer-events: none;
+  z-index: 10;
 }
+
+.play-mascot .mascot {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+}
+
 .speech-bubble {
   background: white;
-  padding: 10px 20px;
-  border-radius: 20px;
+  padding: 8px 15px;
+  border-radius: 15px;
   font-weight: 700;
-  font-size: 1.2rem;
-  margin-bottom: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  font-size: clamp(0.9rem, 3vw, 1.2rem);
+  margin-bottom: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   position: relative;
   color: var(--primary-color);
+  white-space: nowrap;
 }
+
 .speech-bubble::after {
   content: '';
   position: absolute;
@@ -342,57 +390,464 @@ h2 {
 
 /* --- Animations --- */
 @keyframes bounceIn {
-  0% { transform: scale(0.1); opacity: 0; }
-  60% { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0.1);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
-.bounce-in { animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+.bounce-in {
+  animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
 
 @keyframes slideDown {
-  0% { transform: translateY(-50px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
+  0% {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
-.slide-down { animation: slideDown 0.5s ease forwards; }
+
+.slide-down {
+  animation: slideDown 0.5s ease forwards;
+}
 
 @keyframes zoomIn {
-  0% { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
-.zoom-in { animation: zoomIn 0.4s ease forwards; }
+
+.zoom-in {
+  animation: zoomIn 0.4s ease forwards;
+}
 
 @keyframes fadeInUp {
-  0% { transform: translateY(50px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
+  0% {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
-.fade-in-up { animation: fadeInUp 0.5s ease forwards; }
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease forwards;
+}
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
-.pulse { animation: pulse 2s infinite; }
+
+.pulse {
+  animation: pulse 2s infinite;
+}
 
 @keyframes jump {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
 }
-.jump { animation: jump 0.5s ease infinite; }
+
+.jump {
+  animation: jump 0.5s ease infinite;
+}
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-10px); }
-  40%, 80% { transform: translateX(10px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20%,
+  60% {
+    transform: translateX(-10px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(10px);
+  }
 }
 
 @keyframes pop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes ripple {
-  0% { filter: drop-shadow(0 0 0 rgba(254, 202, 87, 0.8)); }
-  100% { filter: drop-shadow(0 0 20px rgba(254, 202, 87, 0)); }
+  0% {
+    filter: drop-shadow(0 0 0 rgba(254, 202, 87, 0.8));
+  }
+
+  100% {
+    filter: drop-shadow(0 0 20px rgba(254, 202, 87, 0));
+  }
 }
-.ripple { animation: ripple 1.5s infinite; }
+
+.ripple {
+  animation: ripple 1.5s infinite;
+}
+
+/* =============================================
+   RESPONSIVE DESIGN — Mobile & Tablet
+   ============================================= */
+
+/* --- Very Small Phones (iPhone SE, ~375px以下) --- */
+@media (max-width: 375px) {
+  .screen {
+    padding: 12px;
+  }
+
+  h1 {
+    margin-top: 12%;
+  }
+
+  .stage-grid {
+    gap: 10px;
+  }
+
+  .btn-stage {
+    padding: 15px;
+    min-height: 65px;
+  }
+
+  .btn-choice {
+    min-height: 65px;
+  }
+
+  .choices-area {
+    gap: 10px;
+  }
+
+  .problem-area {
+    padding: 8px;
+    min-height: 60px;
+  }
+
+  .equation {
+    margin: 5px 0;
+  }
+
+  .play-mascot {
+    bottom: 5px;
+    right: 5px;
+  }
+
+  .play-mascot .mascot {
+    font-size: 2rem;
+  }
+
+  .speech-bubble {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+  }
+}
+
+/* --- Small Phones (375px ~ 430px — iPhone 12/13/14/15) --- */
+@media (min-width: 376px) and (max-width: 430px) {
+  .screen {
+    padding: 15px;
+  }
+
+  h1 {
+    margin-top: 15%;
+  }
+
+  .choices-area {
+    gap: 12px;
+  }
+
+  .problem-area {
+    min-height: 90px;
+    padding: 12px;
+  }
+}
+
+/* --- Short screens (landscape phones / short devices) --- */
+@media (max-height: 600px) {
+  h1 {
+    margin-top: 5%;
+    margin-bottom: 10px;
+    font-size: 1.8rem;
+  }
+
+  h2 {
+    margin-top: 3%;
+    margin-bottom: 15px;
+    font-size: 1.6rem;
+  }
+
+  .title-mascot {
+    margin-bottom: 15px;
+  }
+
+  .mascot {
+    font-size: 3rem;
+  }
+
+  .problem-area {
+    min-height: 50px;
+    padding: 5px;
+  }
+
+  .equation {
+    font-size: 2rem;
+    margin: 5px 0;
+  }
+
+  .visuals {
+    font-size: 1.2rem;
+  }
+
+  .operator {
+    font-size: 1.2rem;
+  }
+
+  .choices-area {
+    gap: 8px;
+    margin-bottom: 5px;
+  }
+
+  .btn-choice {
+    min-height: 55px;
+    font-size: 2rem;
+    border-width: 3px;
+  }
+
+  .btn-stage {
+    min-height: 55px;
+    font-size: 1.5rem;
+    padding: 10px;
+  }
+
+  .stage-grid {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .medal-container {
+    font-size: 4rem;
+    margin: 10px 0;
+  }
+
+  .result-message {
+    margin-bottom: 15px;
+  }
+
+  .result-actions {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .play-mascot {
+    display: none;
+  }
+}
+
+/* --- Medium height (640px ~ 750px — standard phones in portrait) --- */
+@media (min-height: 601px) and (max-height: 750px) {
+  h1 {
+    margin-top: 10%;
+  }
+
+  .title-mascot {
+    margin-bottom: 25px;
+  }
+
+  .problem-area {
+    min-height: 80px;
+  }
+}
+
+/* --- Tablets (768px+) --- */
+@media (min-width: 768px) {
+  #app-container {
+    max-width: 550px;
+    max-height: 850px;
+    border-radius: 35px;
+    border: 10px solid white;
+  }
+
+  .screen {
+    padding: 30px;
+  }
+
+  .btn-stage {
+    padding: 25px;
+    font-size: 2.8rem;
+    min-height: 90px;
+  }
+
+  .btn-choice {
+    font-size: 4rem;
+    min-height: 100px;
+  }
+
+  .choices-area {
+    gap: 20px;
+    padding: 15px;
+  }
+
+  .stage-grid {
+    gap: 20px;
+  }
+
+  .problem-area {
+    min-height: 140px;
+    padding: 25px;
+  }
+
+  .visuals {
+    font-size: 2.8rem;
+  }
+
+  .operator {
+    font-size: 2.8rem;
+  }
+}
+
+/* --- Large Tablets / iPad Pro (1024px+) --- */
+@media (min-width: 1024px) {
+  #app-container {
+    max-width: 600px;
+    max-height: 900px;
+  }
+}
+
+/* --- Landscape orientation on phones --- */
+@media (orientation: landscape) and (max-height: 500px) {
+  h1 {
+    margin-top: 2%;
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+  }
+
+  h2 {
+    margin-top: 2%;
+    margin-bottom: 10px;
+  }
+
+  .title-mascot {
+    margin-bottom: 10px;
+  }
+
+  .mascot {
+    font-size: 2.5rem;
+  }
+
+  .screen {
+    padding: 10px 20px;
+    flex-direction: column;
+  }
+
+  .problem-area {
+    min-height: 40px;
+    padding: 5px;
+  }
+
+  .equation {
+    font-size: 1.8rem;
+    margin: 3px 0;
+  }
+
+  .choices-area {
+    gap: 8px;
+    margin-bottom: 5px;
+  }
+
+  .btn-choice {
+    min-height: 50px;
+    font-size: 1.8rem;
+  }
+
+  .btn-primary {
+    font-size: 1.2rem;
+    padding: 10px 25px;
+    min-height: 45px;
+  }
+
+  .btn-secondary {
+    font-size: 1rem;
+    padding: 10px 20px;
+    min-height: 40px;
+  }
+
+  .btn-stage {
+    font-size: 1.5rem;
+    padding: 10px;
+    min-height: 50px;
+  }
+
+  .stage-grid {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .medal-container {
+    font-size: 3rem;
+    margin: 5px 0;
+  }
+
+  .result-message {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+
+  .result-actions {
+    gap: 8px;
+    margin-bottom: 5px;
+  }
+
+  .play-mascot {
+    display: none;
+  }
+}
