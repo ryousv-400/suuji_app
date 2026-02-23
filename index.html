@@ -9,8 +9,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#ff6b6b">
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔢</text></svg>">
+    <meta name="description" content="たしざんをたのしくまなべる、こどもむけすうじゲーム">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
     <title>かずであそぼう！</title>
     <!-- Google Fonts for UI (Outfit / M PLUS Rounded 1c) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -99,6 +101,17 @@
     <!-- Audio Elements (Using Base64 generic pleasant sounds or simple web audio synth in JS to avoid asset loading issues) -->
 
     <script src="app.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => console.log('[App] Service Worker registered:', reg.scope))
+                    .catch((err) => console.warn('[App] Service Worker registration failed:', err));
+            });
+        }
+    </script>
 </body>
 
 </html>
