@@ -35,9 +35,10 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   overflow: hidden;
-  background-image: radial-gradient(var(--secondary-color) 2px, transparent 2px);
-  background-size: 40px 40px;
-  background-position: 0 0, 20px 20px;
+  background-image: url('assets/bg_pattern.png');
+  background-size: 300px;
+  background-position: center;
+  background-repeat: repeat;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   /* モバイルUX最適化 */
   overscroll-behavior-y: contain;
@@ -138,6 +139,12 @@ h2 {
 .mascot {
   font-size: clamp(4rem, 15vw, 6rem);
   filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.1));
+}
+
+.img-mascot {
+  width: clamp(120px, 30vw, 180px);
+  height: auto;
+  object-fit: contain;
 }
 
 .title-mascot {
@@ -394,6 +401,12 @@ h2 {
   line-height: 1;
 }
 
+.img-reaction {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
 .reaction-text {
   letter-spacing: 2px;
 }
@@ -439,6 +452,12 @@ h2 {
   text-align: center;
   margin: 15px 0;
   filter: drop-shadow(0 10px 20px rgba(254, 202, 87, 0.4));
+}
+
+.img-medal {
+  width: clamp(140px, 35vw, 220px);
+  height: auto;
+  object-fit: contain;
 }
 
 .result-message {

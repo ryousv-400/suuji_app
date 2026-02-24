@@ -302,10 +302,10 @@ function showMascotReaction(text, isHappy) {
     void UI.reactionMascot.offsetWidth; // reset animation
 
     if (isHappy) {
-        UI.reactionEmoji.textContent = '🎉';
+        // UI.reactionEmoji.textContent = '🎉'; // Removed as we use image now
         UI.reactionMascot.classList.add('correct-toast');
     } else {
-        UI.reactionEmoji.textContent = '💪';
+        // UI.reactionEmoji.textContent = '💪'; // Removed as we use image now
         UI.reactionMascot.classList.add('wrong-toast');
     }
 }
