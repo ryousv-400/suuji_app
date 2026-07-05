@@ -1,7 +1,7 @@
 // Service Worker for 「かずであそぼう！」
 // Strategy: Cache First — install時に全リソースを事前キャッシュし、オフライン動作を保証
 
-const CACHE_NAME = 'kazuasobi-v1';
+const CACHE_NAME = 'kazuasobi-v3';
 
 // キャッシュ対象ファイル一覧
 const PRECACHE_URLS = [
@@ -12,9 +12,12 @@ const PRECACHE_URLS = [
     './manifest.json',
     './assets/icon-192.png',
     './assets/icon-512.png',
+    './assets/mascot_rabbit.png',
+    './assets/medal.png',
+    './assets/bg_pattern.png',
     // External CDN resources
     'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js',
-    'https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&family=Outfit:wght@700;900&display=swap'
+    'https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap'
 ];
 
 // Install: 全リソースを事前キャッシュ

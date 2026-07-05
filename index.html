@@ -7,46 +7,41 @@
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#ff6b6b">
+    <meta name="theme-color" content="#ff8a65">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="description" content="たしざんをたのしくまなべる、こどもむけすうじゲーム">
+    <meta name="description" content="10のまとまりでたしざんがすきになる、こどもむけさんすうゲーム">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" sizes="192x192" href="assets/icon-192.png">
     <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
     <title>かずであそぼう！</title>
-    <!-- Google Fonts for UI (Outfit / M PLUS Rounded 1c) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&family=Outfit:wght@700;900&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap"
         rel="stylesheet">
-    <!-- Confetti Library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- Main Style -->
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <div id="app-container">
-        <!-- Titlescreen -->
+        <!-- Title Screen -->
         <section id="screen-title" class="screen active">
             <div class="title-content">
-                <h1 class="bounce-in">かずであそぼう！</h1>
+                <h1 class="bounce-in">かずで<br>あそぼう！</h1>
                 <div class="mascot-container title-mascot">
                     <img src="assets/mascot_rabbit.png" class="mascot img-mascot" alt="うさぎ">
                 </div>
+                <div class="total-stars" id="total-stars-badge">⭐ <span id="total-stars">0</span></div>
+                <div class="friends-row" id="friends-row"></div>
             </div>
-            <button class="btn btn-primary pulse" id="btn-start">スタート</button>
+            <button class="btn btn-primary pulse" id="btn-start">あそぶ！</button>
         </section>
 
         <!-- Stage Select Screen -->
         <section id="screen-stage-select" class="screen hidden">
-            <h2 class="slide-down">どれにする？</h2>
-            <div class="stage-grid">
-                <button class="btn btn-stage" data-stage="1">＋ １</button>
-                <button class="btn btn-stage" data-stage="2">＋ ２</button>
-                <button class="btn btn-stage" data-stage="3">＋ ３</button>
-                <button class="btn btn-stage" data-stage="5">＋ ５</button>
+            <h2 class="slide-down">どれで あそぶ？</h2>
+            <div class="stage-list" id="stage-list">
+                <!-- Stage buttons injected by JS -->
             </div>
             <button class="btn btn-secondary mt-auto" id="btn-back-title">もどる</button>
         </section>
@@ -54,58 +49,55 @@
         <!-- Gameplay Screen -->
         <section id="screen-play" class="screen hidden">
             <div class="top-bar slide-down">
-                <button class="btn btn-icon" id="btn-quit">✖️</button>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill"></div>
+                <button class="btn btn-icon" id="btn-quit" aria-label="やめる">✕</button>
+                <div class="progress-track" id="progress-track">
+                    <!-- Progress dots injected by JS -->
                 </div>
                 <div class="star-count">⭐ <span id="star-text">0</span></div>
             </div>
 
             <div class="play-main">
-                <div class="problem-area zoom-in">
-                    <div class="visuals" id="visuals-left"></div>
+                <div class="problem-area zoom-in" id="problem-area">
+                    <div class="frames-block" id="visuals-left"></div>
                     <div class="operator">＋</div>
-                    <div class="visuals" id="visuals-right"></div>
+                    <div class="frames-block" id="visuals-right"></div>
                 </div>
 
-                <div class="equation">
-                    <span id="num-left">2</span> ＋ <span id="num-right">1</span> ＝ <span id="num-answer">？</span>
+                <div class="hint-banner hidden" id="hint-banner"></div>
+
+                <div class="equation" id="equation">
+                    <span id="num-left">2</span><span class="eq-op">＋</span><span id="num-right">1</span><span
+                        class="eq-op">＝</span><span id="num-answer" class="answer-slot">？</span>
                 </div>
 
-                <!-- Mascot reaction: inline toast between equation and choices -->
                 <div class="reaction-toast hidden" id="reaction-mascot">
-                    <img src="assets/mascot_rabbit.png" class="reaction-emoji img-reaction" id="reaction-emoji"
-                        alt="うさぎ">
+                    <img src="assets/mascot_rabbit.png" class="img-reaction" alt="うさぎ">
                     <span class="reaction-text" id="mascot-speech">やったね！</span>
                 </div>
             </div>
 
-            <div class="choices-area fade-in-up" id="choices-container">
-                <!-- Choices injected by JS -->
-            </div>
+            <div class="choices-area fade-in-up" id="choices-container"></div>
         </section>
 
         <!-- Result Screen -->
         <section id="screen-result" class="screen hidden">
             <div class="result-content">
-                <h2 class="bounce-in">すごい！</h2>
+                <h2 class="bounce-in" id="result-title">すごい！</h2>
                 <div class="medal-container zoom-in ripple">
                     <img src="assets/medal.png" class="img-medal" alt="メダル">
                 </div>
-                <p class="result-message">がんばったね！</p>
+                <div class="result-stars" id="result-stars"></div>
+                <p class="result-message" id="result-message">がんばったね！</p>
+                <div class="friend-unlock hidden" id="friend-unlock"></div>
             </div>
             <div class="result-actions fade-in-up">
                 <button class="btn btn-primary" id="btn-retry-stage">もういちど</button>
-                <button class="btn btn-secondary" id="btn-to-stage-select">ちがうかたち</button>
+                <button class="btn btn-secondary" id="btn-to-stage-select">ちがうのに する</button>
             </div>
         </section>
     </div>
 
-    <!-- Audio Elements (Using Base64 generic pleasant sounds or simple web audio synth in JS to avoid asset loading issues) -->
-
     <script src="app.js"></script>
-
-    <!-- Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

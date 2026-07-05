@@ -1,12 +1,12 @@
 {
   "name": "かずであそぼう！",
   "short_name": "かずあそび",
-  "description": "たしざんをたのしくまなべる、こどもむけすうじゲーム",
+  "description": "10のまとまりでたしざんがすきになる、こどもむけさんすうゲーム",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#fdfaf6",
-  "theme_color": "#ff6b6b",
+  "theme_color": "#ff8a65",
   "icons": [
     {
       "src": "assets/icon-192.png",
