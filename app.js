@@ -1,19 +1,20 @@
 // ============================================================
 // かずであそぼう！ — 10のまとまりで たしざんが すきになるアプリ
 // 学習方針:
-//  - すべての数を「10のフレーム（5×2のマス）」で見せて、
-//    10のまとまりを目で感じられるようにする（subitizing / make-10）
-//  - 青いドットは タップで左のフレームに うつせる。
-//    自分の指で「10のまとまり」を つくる体験ができる
-//  - まちがえても次に飛ばさない。ヒント（10をつくるアニメ）を見せて
-//    同じ問題にもういちど挑戦できる
-//  - 調子がいいと すこしずつ 難しくなる（アダプティブ）
-//  - 星をあつめると「なかま」がふえる（つづける楽しみ）
+//  - すべての数を「10のフレーム（5×2のマス）」で見せる（subitizing / make-10）
+//  - やることは いつも1つだけ 画面に案内する（迷わない）
+//  - 青いドットをタップして 自分の指で「10のまとまり」をつくる
+//  - 10ができたら「かぞえるモード」: 満タンの枠は「10」、
+//    のこりを タップすると 11,12,13… と10から数え足せる（count-on）
+//  - ぜんぶ数えると「10」と「6」のカードが合体して「16」になるアニメで
+//    「数えた結果」と「数字」がつながる
+//  - まちがえても次に飛ばさない。ヒントを見て同じ問題に再挑戦
+//  - 調子がいいと すこしずつ難しくなる／星でなかまがふえる
 // ============================================================
 
 const TOTAL_QUESTIONS = 5;
 const STORAGE_KEY = 'kazu_progress_v3';
-const FRIEND_COST = 5; // ⭐5こで なかまが 1ぴき
+const FRIEND_COST = 5;
 
 const FRIENDS = ['🐰', '🐶', '🐱', '🐼', '🦊', '🐨', '🐯', '🦁', '🐸', '🐧',
     '🦉', '🐢', '🦄', '🐬', '🦖', '🐙', '🦋', '🐿️', '🦩', '🐳',
@@ -71,12 +72,13 @@ let gameState = {
     stage: null,
     questionIndex: 0,
     stars: 0,
-    streak: 0,        // 連続いちばつ正解（調子がいいと問題がすこし難しくなる）
+    streak: 0,
     a: 0, b: 0,
-    moved: 0,         // タップで左へうつした青ドットの数
+    moved: 0,
     answer: null,
     firstTry: true,
-    tenCelebrated: false,
+    countMode: false,   // かぞえるモード中か
+    counted: 0,         // いま何まで数えたか
     results: []
 };
 
@@ -107,6 +109,7 @@ const UI = {
     numAnswer: document.getElementById('num-answer'),
     choicesContainer: document.getElementById('choices-container'),
     hintBanner: document.getElementById('hint-banner'),
+    mergeArea: document.getElementById('merge-area'),
 
     reactionMascot: document.getElementById('reaction-mascot'),
     mascotSpeech: document.getElementById('mascot-speech'),
@@ -118,7 +121,6 @@ const UI = {
 };
 
 // --- 進捗の保存 ---
-// { s1: {best, plays, diff}, ..., lifetime: これまでにもらった⭐の合計 }
 function loadProgress() {
     try {
         return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
@@ -198,10 +200,16 @@ function playSound(type) {
     } else if (type === 'tap') {
         playTone(700, now, 0.07, 'sine', 0.2);
         playTone(1050, now + 0.06, 0.08, 'sine', 0.15);
+    } else if (type === 'count') {
+        playTone(520 + gameState.counted * 30, now, 0.09, 'sine', 0.25);
     } else if (type === 'ten') {
         playTone(659.25, now, 0.1, 'sine', 0.35);
         playTone(880, now + 0.1, 0.1, 'sine', 0.35);
         playTone(1174.7, now + 0.2, 0.25, 'sine', 0.35);
+    } else if (type === 'merge') {
+        playTone(523.25, now, 0.1, 'sine', 0.3);
+        playTone(783.99, now + 0.12, 0.1, 'sine', 0.3);
+        playTone(1046.5, now + 0.24, 0.3, 'sine', 0.35);
     }
 }
 
@@ -244,7 +252,6 @@ function switchScreen(name) {
 
 function renderTitleBadges() {
     UI.totalStars.textContent = lifetimeStars();
-    // なかまたち
     const friends = unlockedFriends();
     UI.friendsRow.innerHTML = '';
     friends.forEach((f, i) => {
@@ -295,7 +302,8 @@ function startStage(stage) {
         streak: 0,
         a: 0, b: 0, moved: 0, answer: null,
         firstTry: true,
-        tenCelebrated: false,
+        countMode: false,
+        counted: 0,
         results: []
     };
     UI.starText.textContent = '0';
@@ -317,6 +325,12 @@ function renderProgressDots() {
     }
 }
 
+function setGuide(html, spokenText) {
+    UI.hintBanner.classList.remove('hidden');
+    UI.hintBanner.innerHTML = html;
+    if (spokenText) speak(spokenText);
+}
+
 function nextQuestion() {
     if (gameState.questionIndex >= TOTAL_QUESTIONS) {
         showResult();
@@ -324,14 +338,14 @@ function nextQuestion() {
     }
 
     const stage = gameState.stage;
-    // むずかしさ: 保存されたレベル + 連続いちばつ正解ボーナス
     const d = clamp(stageDiff(stage.id) + (gameState.streak >= 3 ? 1 : 0), 1, 3);
     const { a, b } = stage.gen(d);
     gameState.a = a;
     gameState.b = b;
     gameState.moved = 0;
     gameState.firstTry = true;
-    gameState.tenCelebrated = false;
+    gameState.countMode = false;
+    gameState.counted = 0;
     gameState.answer = stage.make10 ? b : a + b;
 
     if (stage.make10) {
@@ -348,11 +362,10 @@ function nextQuestion() {
         UI.numAnswer.classList.add('answer-slot');
     }
 
-    UI.hintBanner.classList.add('hidden');
     UI.reactionMascot.classList.add('hidden');
+    UI.mergeArea.classList.add('hidden');
+    UI.mergeArea.innerHTML = '';
     UI.choicesContainer.innerHTML = '';
-
-    renderProblemVisuals();
 
     generateChoices(gameState.answer).forEach(choice => {
         const btn = document.createElement('button');
@@ -362,10 +375,18 @@ function nextQuestion() {
         UI.choicesContainer.appendChild(btn);
     });
 
+    // やることを いつも1つだけ 案内する
     if (stage.make10) {
-        speak(`${a} と あといくつで 10 かな？`);
+        renderProblemVisuals();
+        setGuide(`${a} と あといくつで 10 かな？`, `${a} と あといくつで 10 かな？`);
+    } else if (needsMakeTen()) {
+        renderProblemVisuals();
+        setGuide(`🔵 あおい ドットを タップして <b>10</b> を つくろう！`,
+            `${a} たす ${b}！ あおい どっとを たっぷして 10 を つくろう！`);
     } else {
-        speak(`${a} たす ${b} は いくつかな？`);
+        enterCountMode(false);
+        setGuide(`👆 ドットを タッチして かぞえてみよう！`,
+            `${a} たす ${b}！ どっとを たっちして かぞえてみよう！`);
     }
 
     const area = document.getElementById('problem-area');
@@ -374,11 +395,16 @@ function nextQuestion() {
     area.classList.add('zoom-in');
 }
 
-// --- 問題エリアの描画（青ドットはタップで移動できる）---
+// --- 問題エリアの描画 ---
 function movableGap() {
-    // 左の最後のフレームの空きマス数（0 = もう満タン）
     const rem = gameState.a % 10;
     return rem === 0 ? 0 : 10 - rem;
+}
+
+// 10づくりが必要な問題か（青ドットの移動フェーズがあるか）
+function needsMakeTen() {
+    const { a, b, stage } = gameState;
+    return !stage.make10 && movableGap() > 0 && movableGap() <= b;
 }
 
 function renderProblemVisuals(opts = {}) {
@@ -391,71 +417,164 @@ function renderProblemVisuals(opts = {}) {
     const canMoveMore = moved < Math.min(movableGap(), b);
     renderNumber(UI.visualsLeft, a, 'coral', {
         movedIn: moved,
-        onMovedTap: moved > 0 ? moveDotBack : null
+        onDotTap: null,
+        onMovedTap: (!gameState.countMode && moved > 0) ? moveDotBack : null,
+        countMode: gameState.countMode
     });
     renderNumber(UI.visualsRight, b - moved, 'sky', {
-        onDotTap: canMoveMore ? moveDotToLeft : null
+        onDotTap: (!gameState.countMode && canMoveMore) ? moveDotToLeft : null,
+        countMode: gameState.countMode
     });
 }
 
 function moveDotToLeft() {
     gameState.moved++;
     playSound('tap');
-    renderProblemVisuals();
-    // 10のまとまりが完成した瞬間をおいわい
     const total = gameState.a + gameState.moved;
-    if (total % 10 === 0 && !gameState.tenCelebrated) {
-        gameState.tenCelebrated = true;
+    if (total % 10 === 0) {
+        // 10のまとまり完成 → かぞえるモードへ
         playSound('ten');
-        const sum = gameState.a + gameState.b;
-        const ones = sum % 10;
-        UI.hintBanner.classList.remove('hidden');
-        UI.hintBanner.innerHTML = ones === 0
-            ? `10のまとまりが できた！ ぜんぶで いくつかな？`
-            : `10のまとまりが できた！ <b>10 と ${ones}</b> で いくつかな？`;
-        speak('じゅうの まとまりが できたね！');
+        enterCountMode(true);
+    } else {
+        renderProblemVisuals();
     }
 }
 
 function moveDotBack() {
-    if (gameState.moved <= 0) return;
+    if (gameState.moved <= 0 || gameState.countMode) return;
     gameState.moved--;
-    gameState.tenCelebrated = false;
     playSound('tap');
     renderProblemVisuals();
 }
 
+// --- かぞえるモード ---
+// 満タンの枠は「10」と表示済みにして、のこりのドットを
+// タップすると 11,12,13… と10から数え足す（count-on from ten）
+function enterCountMode(celebrate) {
+    gameState.countMode = true;
+    const { a, b, moved } = gameState;
+    const leftTotal = a + moved;
+    const fullFrames = Math.floor(leftTotal / 10) + Math.floor((b - moved) / 10);
+    gameState.counted = fullFrames * 10;
+    renderProblemVisuals();
+
+    const sum = a + b;
+    if (celebrate) {
+        const ones = sum % 10;
+        setGuide(
+            `✨ 10が できた！ こんどは のこりを タッチして <b>じゅういち、じゅうに…</b> と かぞえてみよう！`,
+            'じゅうが できた！ のこりを たっちして、じゅういち、じゅうに、と かぞえてみよう！');
+    }
+
+    // のこりが0（ちょうど10や20）なら すぐ合体アニメ
+    if (gameState.counted >= sum && sum > 0) {
+        setTimeout(() => finishCounting(), 800);
+    }
+}
+
+function countDot(dotEl) {
+    if (!gameState.countMode) return;
+    if (dotEl.classList.contains('counted')) return;
+    gameState.counted++;
+    playSound('count');
+    dotEl.classList.add('counted');
+    const badge = document.createElement('span');
+    badge.className = 'count-badge';
+    badge.textContent = gameState.counted;
+    dotEl.parentElement.appendChild(badge);
+    speak(String(gameState.counted));
+
+    const sum = gameState.a + gameState.b;
+    if (gameState.counted >= sum) {
+        setTimeout(() => finishCounting(), 500);
+    }
+}
+
+// 数え終わり → 「10」と「6」が合体して「16」になるアニメ
+function finishCounting() {
+    const sum = gameState.a + gameState.b;
+    const tens = Math.floor(sum / 10);
+    const ones = sum % 10;
+
+    if (sum <= 10) {
+        setGuide(`ぜんぶで <b>${sum}</b>！ したの ボタンから <b>${sum}</b> を さがしてね！`,
+            `ぜんぶで ${sum}！ ${sum} の ぼたんを おしてね！`);
+        return;
+    }
+
+    UI.hintBanner.classList.add('hidden');
+    const area = UI.mergeArea;
+    area.classList.remove('hidden');
+    area.innerHTML = '';
+
+    // カードを並べる: [10] (＋[10]) ＋ [6]
+    const parts = [];
+    for (let t = 0; t < tens; t++) parts.push(10);
+    if (ones > 0) parts.push(ones);
+
+    parts.forEach((val, i) => {
+        if (i > 0) {
+            const plus = document.createElement('span');
+            plus.className = 'merge-plus';
+            plus.textContent = '＋';
+            area.appendChild(plus);
+        }
+        const card = document.createElement('span');
+        card.className = 'merge-card' + (val === 10 ? ' tens' : ' ones');
+        card.textContent = val;
+        card.style.animationDelay = `${i * 0.15}s`;
+        area.appendChild(card);
+    });
+
+    playSound('merge');
+    const onesText = ones > 0 ? ` と ${ones}` : '';
+    speak(`10${tens > 1 ? ' と 10' : ''}${onesText} で…`);
+
+    // 合体！
+    setTimeout(() => {
+        area.classList.add('merging');
+        setTimeout(() => {
+            area.innerHTML = `<span class="merge-card result">${sum}</span>`;
+            area.classList.remove('merging');
+            playSound('ten');
+            speak(`${sum}！ ${sum} の ぼたんを おしてね！`);
+            setGuide(`したの ボタンから <b>${sum}</b> を さがしてね！`, null);
+        }, 700);
+    }, 1300);
+}
+
 // --- 10のフレーム描画 ---
-// n を 10個ずつのフレームに分けて描く。「13」なら 満タンのフレーム＋3個
-// opts.movedIn: タップで移動してきた緑ドットの数（n のあとに続けて描く）
-// opts.onDotTap / opts.onMovedTap: ドットをタップできるようにする
 function renderNumber(container, n, colorClass, opts = {}) {
     container.innerHTML = '';
     const movedIn = opts.movedIn || 0;
     const total = n + movedIn;
-    const frameCount = Math.max(1, Math.ceil(Math.max(total, 1) / 10));
+    if (total === 0) return; // かぞえるモードで空になった側は何も描かない
+    const frameCount = Math.max(1, Math.ceil(total / 10));
     for (let f = 0; f < frameCount; f++) {
         const frame = document.createElement('div');
         frame.className = 'ten-frame';
         const start = f * 10;
+        const filledInFrame = Math.min(10, Math.max(0, total - start));
+        const isFullFrame = filledInFrame === 10;
         for (let i = 0; i < 10; i++) {
             const idx = start + i;
             const cell = document.createElement('span');
             cell.className = 'tf-cell';
-            if (idx < n) {
+            if (idx < total) {
                 const dot = document.createElement('span');
-                dot.className = `tf-dot ${colorClass}`;
-                dot.style.animation = `dotIn 0.35s ease ${(idx * 0.04)}s both`;
-                if (opts.onDotTap) {
+                const isMoved = idx >= n;
+                dot.className = `tf-dot ${isMoved ? 'moved' : colorClass}`;
+                dot.style.animation = isMoved
+                    ? `dotJump 0.4s ease both`
+                    : `dotIn 0.35s ease ${(idx * 0.04)}s both`;
+                if (opts.countMode && !isFullFrame) {
+                    // かぞえるモード: 満タンでない枠のドットをタップで数える
+                    dot.classList.add('countable');
+                    dot.addEventListener('click', () => countDot(dot));
+                } else if (!opts.countMode && !isMoved && opts.onDotTap) {
                     dot.classList.add('tappable');
                     dot.addEventListener('click', opts.onDotTap);
-                }
-                cell.appendChild(dot);
-            } else if (idx < total) {
-                const dot = document.createElement('span');
-                dot.className = 'tf-dot moved';
-                dot.style.animation = `dotJump 0.4s ease both`;
-                if (opts.onMovedTap) {
+                } else if (!opts.countMode && isMoved && opts.onMovedTap) {
                     dot.classList.add('tappable');
                     dot.addEventListener('click', opts.onMovedTap);
                 }
@@ -465,12 +584,19 @@ function renderNumber(container, n, colorClass, opts = {}) {
             }
             frame.appendChild(cell);
         }
-        const filledInFrame = Math.min(10, Math.max(0, total - start));
-        if (filledInFrame === 10) {
+        if (isFullFrame) {
             const badge = document.createElement('span');
             badge.className = 'tf-badge';
             badge.textContent = '10';
             frame.appendChild(badge);
+            if (opts.countMode) {
+                // かぞえるモード: 満タンの枠は「10」と数え済みで表示
+                frame.classList.add('frame-counted');
+                const label = document.createElement('span');
+                label.className = 'frame-total';
+                label.textContent = '10';
+                frame.appendChild(label);
+            }
         }
         container.appendChild(frame);
     }
@@ -487,7 +613,7 @@ function generateChoices(correctAnswer) {
 
 // --- 解答処理: まちがえても同じ問題に再挑戦できる ---
 const PRAISE = ['せいかい！', 'すごい！', 'やったね！', 'そのちょうし！', 'てんさい！'];
-const ENCOURAGE = ['おしい！ ヒントを みてみよう', 'だいじょうぶ！ もういっかい！', 'いっしょに かんがえよう！'];
+const ENCOURAGE = ['おしい！ もういっかい！', 'だいじょうぶ！ もういっかい！', 'いっしょに かんがえよう！'];
 
 function handleAnswer(selected, buttonElement) {
     const allButtons = UI.choicesContainer.querySelectorAll('button');
@@ -552,39 +678,27 @@ function handleAnswer(selected, buttonElement) {
     }
 }
 
-// --- ヒント: 「10のまとまり」を目で見せる ---
+// --- まちがえたときのヒント ---
 function showHint() {
     const { a, b, stage } = gameState;
-    const banner = UI.hintBanner;
-    banner.classList.remove('hidden');
 
     if (stage.make10) {
         renderProblemVisuals({ highlightEmpty: true });
-        banner.innerHTML = `ひかっている マスを かぞえてみよう！`;
-        speak('ひかっている ますを かぞえてみよう');
+        setGuide(`ひかっている マスを かぞえてみよう！`, 'ひかっている ますを かぞえてみよう');
         return;
     }
 
-    const sum = a + b;
-    if (sum <= 10 && movableGap() >= b) {
-        banner.innerHTML = `あおい ドットを タップして、ひだりに あつめて かぞえてみよう！`;
-        speak('あおい どっとを たっぷして、ひだりに あつめて かぞえてみよう');
+    if (!gameState.countMode && needsMakeTen()) {
+        // まだ10を作っていない → 自動で10を作って かぞえるモードへ
+        gameState.moved = Math.min(movableGap(), b);
+        playSound('ten');
+        enterCountMode(true);
         return;
     }
 
-    // くり上がり: 右のドットを自動で動かして10をつくって見せる
-    gameState.moved = Math.min(movableGap(), b);
-    gameState.tenCelebrated = true;
-    renderProblemVisuals();
-
-    const tens = Math.floor(sum / 10);
-    const ones = sum % 10;
-    if (ones === 0) {
-        banner.innerHTML = `10のまとまりが ${tens}つ！ ぜんぶで いくつかな？`;
-    } else {
-        banner.innerHTML = `10のまとまりが できたよ！ <b>10${tens > 1 ? 'が' + tens + 'つ' : ''} と ${ones}</b> で いくつかな？`;
-    }
-    speak('じゅうの まとまりが できたよ');
+    // かぞえるモード中のまちがい → 数えることをうながす
+    setGuide(`👆 ドットを ぜんぶ タッチして かぞえてみよう！`,
+        'どっとを ぜんぶ たっちして かぞえてみよう！');
 }
 
 function showMascotReaction(text, isHappy) {
@@ -626,7 +740,6 @@ function showResult() {
         speech = 'さいごまで がんばったね！';
     }
 
-    // あたらしい なかま
     if (newFriends.length > 0) {
         UI.friendUnlock.classList.remove('hidden');
         UI.friendUnlock.innerHTML =

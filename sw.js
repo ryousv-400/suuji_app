@@ -1,7 +1,7 @@
 // Service Worker for 「かずであそぼう！」
 // Strategy: Cache First — install時に全リソースを事前キャッシュし、オフライン動作を保証
 
-const CACHE_NAME = 'kazuasobi-v3';
+const CACHE_NAME = 'kazuasobi-v4';
 
 // キャッシュ対象ファイル一覧
 const PRECACHE_URLS = [
